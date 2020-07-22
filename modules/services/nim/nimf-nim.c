@@ -283,6 +283,9 @@ nimf_nim_start (NimfService *service)
   g_chmod (path, 0600);
   g_free  (path);
 
+  // 여기서 unix 소캣을 생성한다.
+  // uds가 단방향이라 배웠는데 아니었네 ㅋㅋㅋㅋ;; 대단들하셔 정말.
+
   if (error)
   {
     g_critical (G_STRLOC ": %s: %s", G_STRFUNC, error->message);

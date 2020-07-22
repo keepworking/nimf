@@ -790,15 +790,24 @@ nimf_server_start (NimfServer *server)
   g_return_val_if_fail (NIMF_IS_SERVER (server), FALSE);
 
   nimf_server_load_services (server);
+  // 님프 서비스 모듈이 모여있는 디렉토리 읽어서 *.so 로드
 
   server->priv->candidatable = g_hash_table_lookup (server->priv->services,
                                                     "nimf-candidate");
   server->priv->preeditable  = g_hash_table_lookup (server->priv->services,
                                                     "nimf-preedit-window");
+  // 로드된 모듈은 hash 에서 저장해서 관리하는듯
+  // 로드된 모듈중에 단어 후보, 프리에딧 윈도우가 있으면 등록
+                                                    
   nimf_service_start (NIMF_SERVICE (server->priv->candidatable));
   nimf_service_start (NIMF_SERVICE (server->priv->preeditable));
+  // 등록된 서비스 실행 
+  // candidatable, preeditable 이게 특수한 것들이라 이것만 실행시키는 건가?
 
   nimf_server_load_engines (server);
+  // 엔진은 설정 목록에서 찾아서 호출하는듯 
+  // 설정된 내용중에 active 된것들만 로드 하는 구조
+  // 아직 정확한 engine의 호출 모양세는 좀더 파악해보아야 할듯
 
   GHashTableIter iter;
   gpointer       service;
@@ -815,6 +824,7 @@ nimf_server_start (NimfServer *server)
     if (!nimf_service_start (NIMF_SERVICE (service)))
       g_hash_table_iter_remove (&iter);
   }
+  // candidate, preedit-window 를 제외한 서비스 실행
 
   g_signal_connect (server->priv->settings, "changed::hotkeys",
                     G_CALLBACK (on_changed_hotkeys), server);
@@ -822,5 +832,12 @@ nimf_server_start (NimfServer *server)
                     G_CALLBACK (on_use_singleton), server);
   g_signal_connect (server->priv->settings, "changed::hidden-active-engines",
                     G_CALLBACK (on_changed_active_engines), server);
+  // 이벤트 시그널 연결 
+
+  // 소캣은 어디서 열지?
+  // 서비스에 nim 쪽에서 여는듯
+
+
+
   return TRUE;
 }
