@@ -90,16 +90,21 @@ on_incoming (GSocket        *socket,
 
   nic = g_hash_table_lookup (connection->ics, GUINT_TO_POINTER (icid));
 
+  // 아래 스위치 문은 클라이언트에게서 받은 이벤트를 핸들링하는 구조
+  // uds 를 통해 전달받은 데이터는 특정 포맷이 있어서 헤더-바디 구조로 구성되어있는듯
+  // 당연히 json은 아니고 binary 데이터인듯
   switch (message->header->type)
   {
     case NIMF_MESSAGE_CREATE_CONTEXT:
       nic = nimf_nim_ic_new (icid, connection);
       g_hash_table_insert (connection->ics, GUINT_TO_POINTER (icid), nic);
+      // input context 등록 hash map으로 관리
       nimf_send_message (socket, icid, NIMF_MESSAGE_CREATE_CONTEXT_REPLY,
                          NULL, 0, NULL);
       break;
     case NIMF_MESSAGE_DESTROY_CONTEXT:
       g_hash_table_remove (connection->ics, GUINT_TO_POINTER (icid));
+      // hashmap 에서 input context 삭제
       nimf_send_message (socket, icid, NIMF_MESSAGE_DESTROY_CONTEXT_REPLY,
                          NULL, 0, NULL);
       break;
@@ -187,6 +192,7 @@ nimf_nim_add_connection (NimfNim        *nim,
   connection->id  = id;
   connection->nim = nim;
   g_hash_table_insert (nim->connections, GUINT_TO_POINTER (id), connection);
+  // 추가된 클라이언트는 해시맵에서 관리된다.
 
   return id;
 }
@@ -210,6 +216,7 @@ on_new_connection (GSocketService    *service,
   g_source_set_callback (connection->source,
                          (GSourceFunc) on_incoming,
                          connection, NULL);
+  // 클라이언트에 대해서 콜백 함수를 등록하는듯
   g_source_attach (connection->source, NULL);
 
   return TRUE;
