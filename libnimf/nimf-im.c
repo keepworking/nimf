@@ -273,7 +273,7 @@ nimf_im_connect (NimfIM *im)
       g_object_unref (nimf_im_socket);
       nimf_im_socket = NULL;
     }
-
+    // 여기서 g_socket_service 와 연결하는 듯, 
     nimf_im_socket = g_socket_new (G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM,
                                    G_SOCKET_PROTOCOL_DEFAULT, NULL);
     address = g_unix_socket_address_new_with_type (nimf_im_socket_path, -1,
@@ -285,6 +285,7 @@ nimf_im_connect (NimfIM *im)
       {
         if (im->priv->uid == info.st_uid)
         {
+          // 연결함수
           if (g_socket_connect (nimf_im_socket, address, NULL, &error))
           {
             break;
@@ -320,10 +321,14 @@ nimf_im_connect (NimfIM *im)
     if (nimf_im_is_connected ())
     {
       /* when g_main_context_iteration(), iterate only socket */
+      // 여기서 통신 데이터 콜백 등록
+      // callback을 null 에다 해도 되는구나...
       nimf_im_socket_source = g_socket_create_source (nimf_im_socket, G_IO_IN, NULL);
       g_source_set_can_recurse (nimf_im_socket_source, TRUE);
       g_source_set_callback (nimf_im_socket_source,
                              (GSourceFunc) on_incoming_message, NULL, NULL);
+      // 그래도 context에 어태치는 하네..
+      // g_main_loop  없이도 동작은 한다~~~
       g_source_attach (nimf_im_socket_source, nimf_im_context);
 
       nimf_im_default_source = g_socket_create_source (nimf_im_socket, G_IO_IN, NULL);
